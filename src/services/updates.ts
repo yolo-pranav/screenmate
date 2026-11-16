@@ -72,7 +72,10 @@ export interface UpdateSnapshot {
 }
 
 export const UPDATE_ENDPOINT = `${DEFAULT_WORKER_ORIGIN}/update/android`;
-const CHECK_INTERVAL_MS = 6 * 60 * 60_000;
+// Checking is one small request to the worker (the APK downloads only when
+// there is something newer), so every app launch checks, and returning to
+// the app checks again after this long
+const CHECK_INTERVAL_MS = 30 * 60_000;
 const FETCH_TIMEOUT_MS = 15_000;
 const LAST_CHECK_KEY = 'androidUpdateLastCheck';
 const READY_KEY = 'androidUpdateReady';
@@ -190,23 +193,18 @@ const startElectron = (bridge: ScreenmateBridge): (() => void) => {
 // ---- Android ----
 
 // lastCheckAt is only set once a check completes (no release, nothing newer,
-// already downloaded, or download finished), so failures retry on next resume
+// already downloaded, or download finished), so failures retry on next resume.
+// It lives in memory only, so a new launch always checks.
 let lastCheckAt = 0;
 let checking = false;
 
-const loadLastCheckAt = (): number => {
-  try {
-    const n = Number(window.localStorage.getItem(LAST_CHECK_KEY));
-    return Number.isFinite(n) && n > 0 ? n : 0;
-  } catch { return 0; }
-};
-
 const saveLastCheckAt = (at: number) => {
   lastCheckAt = at;
-  try {
-    if (at) window.localStorage.setItem(LAST_CHECK_KEY, String(at));
-    else window.localStorage.removeItem(LAST_CHECK_KEY);
-  } catch {}
+};
+
+// Older builds stored the last check time and waited 6 hours across restarts
+const clearStoredLastCheck = () => {
+  try { window.localStorage.removeItem(LAST_CHECK_KEY); } catch {}
 };
 
 const loadSavedReady = (): AndroidReadyUpdate | null => {
@@ -227,7 +225,7 @@ const saveReady = (ready: AndroidReadyUpdate | null) => {
 // Brings back a download from an earlier session while it is still newer
 // than the installed build; drops it once that build is installed
 const restoreAndroid = async () => {
-  lastCheckAt = loadLastCheckAt();
+  clearStoredLastCheck();
   const saved = loadSavedReady();
   if (!saved) return;
   const { App } = await import('@capacitor/app');
