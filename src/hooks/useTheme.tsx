@@ -1,5 +1,6 @@
 "use client"
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { Capacitor, SystemBars, SystemBarsStyle } from '@capacitor/core';
 import { Theme } from '../types';
 
 interface ThemeContextType {
@@ -24,6 +25,10 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     root.classList.remove(theme === 'dark' ? 'light' : 'dark');
     root.classList.add(theme);
     localStorage.setItem('theme', theme);
+    // Phone status bar icons: light on the dark theme, dark on the light theme
+    if (Capacitor.isNativePlatform()) {
+      SystemBars.setStyle({ style: theme === 'dark' ? SystemBarsStyle.Dark : SystemBarsStyle.Light }).catch(() => {});
+    }
   }, [theme]);
 
   const toggleTheme = () => {

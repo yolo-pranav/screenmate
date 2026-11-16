@@ -26,3 +26,8 @@ next-env.d.ts
 
 # Editor settings (machine-specific paths)
 .vscode/
+
+# Signing keys and their passwords: never commit
+*.jks
+*.keystore
+keystore.properties

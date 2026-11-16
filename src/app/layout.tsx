@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
@@ -19,6 +19,14 @@ export const metadata: Metadata = {
   description: "A movie and TV discovery app and OTT front-end demo: browse trending titles, search with filters, keep a synced watchlist and watch history, and watch trailers. The player can be connected to a platform's own streaming server.",
 };
 
+// viewport-fit=cover lets the app draw under the status bar and into the notch
+// area on phones; env(safe-area-inset-*) then tells the page how much to offset.
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -36,7 +44,7 @@ export default function RootLayout({
         <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-200">
           <AndroidBackButtonHandler />
           <Header />
-          <main className="w-full px-4 lg:px-8 py-8">{children}</main>
+          <main className="w-full px-4 lg:px-8 pt-8 pb-[calc(2rem+env(safe-area-inset-bottom))]">{children}</main>
           <DeviceDataChoice />
           <UpdateBanner />
         </div>

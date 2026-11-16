@@ -21,7 +21,7 @@ const Header: NextPage = () => {
   // registering a second Capacitor listener here would double-fire on every press.
 
   return (
-    <header className="sticky top-0 z-50 bg-gray-100/90 dark:bg-gray-900/90 backdrop-blur-sm shadow-sm border-b border-gray-200 dark:border-gray-800">
+    <header style={{ paddingTop: 'env(safe-area-inset-top)' }} className="sticky top-0 z-50 bg-gray-100/90 dark:bg-gray-900/90 backdrop-blur-sm shadow-sm border-b border-gray-200 dark:border-gray-800">
       <div className="w-full px-4 lg:px-8 py-3 flex justify-between items-center">
         <div className="flex items-center gap-2">
           {!isHome && (
