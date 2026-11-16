@@ -1,0 +1,190 @@
+# Builds and publishes a release when a version tag (v*) is pushed:
+# Windows installer, macOS dmg (unsigned) and Android APK. The iOS simulator
+# build is a separate workflow (ios.yml).
+# See RELEASING.md for the one-time setup and the release steps.
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    name: Windows installer
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Check tag matches package.json version
+        shell: bash
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if [ "$TAG" != "v$VERSION" ]; then
+            echo "::error::Tag $TAG does not match package.json version $VERSION (expected v$VERSION)."
+            exit 1
+          fi
+
+      - run: npm run build-next
+
+      # Creates the GitHub release for this tag and uploads the installer,
+      # its .blockmap and latest.yml (read by electron-updater).
+      - name: Build and publish installer
+        run: npx electron-builder --win nsis --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  macos:
+    name: macOS dmg (unsigned)
+    runs-on: macos-latest
+    # The windows job checks the tag and creates the GitHub release; this job
+    # adds the macOS files to it.
+    needs: windows
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build-next
+
+      # Uploads the universal (Intel + Apple silicon) .dmg, the .zip and
+      # latest-mac.yml (read by the macOS app to learn about new versions) to
+      # the release. Not code-signed: there is no Apple Developer ID yet.
+      - name: Build and publish dmg
+        run: npx electron-builder --mac dmg zip --universal --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+          # electron-builder silently skips uploading to a release published
+          # more than 2 hours ago. Without this, re-running a failed job later
+          # would succeed without uploading anything.
+          EP_GH_IGNORE_TIME: "true"
+
+      - name: Check the macOS files are on the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          ASSETS=$(gh release view "$TAG" --json assets --jq '.assets[].name')
+          echo "$ASSETS"
+          for pattern in '\.dmg$' '_mac\.zip$' '^latest-mac\.yml$'; do
+            if ! echo "$ASSETS" | grep -Eq "$pattern"; then
+              echo "::error::Release $TAG has no file matching $pattern. electron-builder probably skipped the upload; see its log above."
+              exit 1
+            fi
+          done
+
+  android:
+    name: Android APK
+    runs-on: ubuntu-latest
+    needs: windows
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - run: npm ci
+
+      - run: npm run build-next
+
+      - run: npx cap sync android
+
+      - name: Decode release keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "::error::Secret ANDROID_KEYSTORE_BASE64 is not set. See RELEASING.md."
+            exit 1
+          fi
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release.jks"
+
+      - name: Build signed release APK
+        working-directory: android
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/release.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon
+
+      - name: Remove keystore
+        if: always()
+        run: rm -f "$RUNNER_TEMP/release.jks"
+
+      - name: Rename APK, check it and write android-update.json
+        id: apk
+        env:
+          REPO: ${{ github.repository }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          SRC=android/app/build/outputs/apk/release/app-release.apk
+          if [ ! -f "$SRC" ]; then
+            echo "::error::$SRC not found. The release build is probably unsigned; check the ANDROID_* secrets."
+            ls -l android/app/build/outputs/apk/release/ || true
+            exit 1
+          fi
+          APK="ScreenMate-$VERSION.apk"
+          mv "$SRC" "$APK"
+
+          BUILD_TOOLS="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -n 1)"
+          "$BUILD_TOOLS/apksigner" verify "$APK"
+
+          VERSION_CODE=$(node -p "const [a,b,c]=require('./package.json').version.split('.').map(Number); a*10000+b*100+c")
+          APK_CODE=$("$BUILD_TOOLS/aapt2" dump badging "$APK" | sed -n "s/.*versionCode='\([0-9]*\)'.*/\1/p" | head -n 1)
+          if [ "$APK_CODE" != "$VERSION_CODE" ]; then
+            echo "::error::APK versionCode is '$APK_CODE', expected $VERSION_CODE for version $VERSION."
+            exit 1
+          fi
+
+          SHA256=$(sha256sum "$APK" | cut -d ' ' -f 1)
+          VERSION="$VERSION" VERSION_CODE="$VERSION_CODE" SHA256="$SHA256" APK="$APK" node -e '
+            const e = process.env;
+            const manifest = {
+              version: e.VERSION,
+              versionCode: Number(e.VERSION_CODE),
+              apkUrl: `https://github.com/${e.REPO}/releases/download/v${e.VERSION}/${e.APK}`,
+              sha256: e.SHA256,
+            };
+            require("fs").writeFileSync("android-update.json", JSON.stringify(manifest, null, 2) + "\n");
+          '
+          cat android-update.json
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "apk=$APK" >> "$GITHUB_OUTPUT"
+
+      - name: Upload APK and android-update.json to the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: gh release upload "v${{ steps.apk.outputs.version }}" "${{ steps.apk.outputs.apk }}" android-update.json --clobber

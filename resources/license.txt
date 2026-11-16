@@ -1,0 +1,23 @@
+SCREENMATE - TERMS OF USE
+
+Copyright (c) 2025 Pranav. All rights reserved.
+
+1. ABOUT SCREENMATE
+ScreenMate is a movie and TV discovery app and a demo front-end for streaming (OTT) platforms. It shows title information and images from The Movie Database (TMDB), lists the services a title is available on, keeps a watchlist and watch history that can sync to your account, and plays trailers through YouTube's embedded player. ScreenMate does not host, index or link to video content. If an account is set up to use a streaming platform's own player, that platform provides the player and is responsible for its content and licensing.
+
+2. ACCOUNTS AND YOUR DATA
+An account is optional. If you create one, your email address, watchlist and watch history are stored so they can sync between your devices. You can delete your account, and the data stored with it, at any time from the Account window. Signing out removes the watchlist and watch history from this device; they stay saved in your account.
+
+3. UPDATES
+ScreenMate checks for new versions and may download them in the background. An update is installed only when you choose to restart or install it.
+
+4. THIRD-PARTY SERVICES
+Title information and images are provided by TMDB, streaming availability by JustWatch, and trailers are played through YouTube. Each is subject to its own terms of use. This product uses the TMDB API but is not endorsed or certified by TMDB.
+
+5. NO WARRANTY
+The software is provided "as is", without warranty of any kind, express or implied.
+
+6. LIMITATION OF LIABILITY
+To the maximum extent permitted by applicable law, the author(s) shall not be liable for any direct, indirect, incidental or consequential damages arising from the use of, or inability to use, this software.
+
+By clicking "I Agree", you accept these terms.

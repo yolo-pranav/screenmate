@@ -1,0 +1,10 @@
+name = "screenmate"
+main = "index.js"
+compatibility_date = "2025-09-01"
+workers_dev = true
+# Keep variables set in the Cloudflare dashboard when deploying with wrangler
+keep_vars = true
+
+# Variables (not stored here) — set in the dashboard or with `npx wrangler secret put <NAME>`:
+#   SUPABASE_URL, SUPABASE_ANON_KEY, TMDB_PROXY_URL, PLAYER_MODE, ACCESS
+#   (+ EMBED_MOVIE_URL, EMBED_TV_URL when PLAYER_MODE=embed) — see index.js

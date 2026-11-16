@@ -1,0 +1,107 @@
+# Builds the iOS app for the iOS Simulator, without code signing.
+# This proves the Xcode project compiles; the result is not installable on
+# devices and is not distributed. See RELEASING.md ("iOS").
+name: iOS build
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+jobs:
+  simulator:
+    name: iOS Simulator build
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # Capacitor 8 needs a recent Xcode. Use the newest stable one on the
+      # runner rather than the image default (beta builds are skipped).
+      - name: Select the newest stable Xcode
+        run: |
+          XCODE=$(node -e '
+            const apps = require("fs").readdirSync("/Applications")
+              .map((name) => /^Xcode_(\d+(?:\.\d+)*)\.app$/.exec(name))
+              .filter(Boolean)
+              .map((m) => ({ name: m[0], parts: m[1].split(".").map(Number) }));
+            apps.sort((a, b) => {
+              for (let i = 0; i < Math.max(a.parts.length, b.parts.length); i++) {
+                const d = (a.parts[i] || 0) - (b.parts[i] || 0);
+                if (d) return d;
+              }
+              return 0;
+            });
+            if (apps.length) console.log("/Applications/" + apps[apps.length - 1].name);
+          ')
+          if [ -n "$XCODE" ]; then
+            sudo xcode-select -s "$XCODE/Contents/Developer"
+          fi
+          xcodebuild -version
+
+      - run: npm ci
+
+      - name: Compute version and build number
+        id: version
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if [ "$REF_TYPE" = "tag" ] && [ "$TAG" != "v$VERSION" ]; then
+            echo "::error::Tag $TAG does not match package.json version $VERSION (expected v$VERSION)."
+            exit 1
+          fi
+          BUILD=$(node -p "const [a,b,c]=require('./package.json').version.split('.').map(Number); if (b>99||c>99) throw new Error('minor and patch must be 99 or below'); a*10000+b*100+c")
+          echo "MARKETING_VERSION=$VERSION, CURRENT_PROJECT_VERSION=$BUILD"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "build=$BUILD" >> "$GITHUB_OUTPUT"
+
+      - run: npm run build-next
+
+      # Copies out/ into the Xcode project and regenerates the Swift package
+      # that links the Capacitor plugins.
+      - run: npx cap sync ios
+
+      - name: Build for the iOS Simulator
+        run: |
+          xcodebuild -list -project ios/App/App.xcodeproj
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            MARKETING_VERSION="${{ steps.version.outputs.version }}" \
+            CURRENT_PROJECT_VERSION="${{ steps.version.outputs.build }}" \
+            build
+
+      - name: Zip App.app
+        run: |
+          APP=build/Build/Products/Release-iphonesimulator/App.app
+          if [ ! -d "$APP" ]; then
+            echo "::error::$APP not found."
+            ls -l build/Build/Products/ || true
+            exit 1
+          fi
+          # GitHub serves the artifact as <artifact name>.zip, so the inner zip gets
+          # a different name to avoid unzipping a file over the archive itself
+          ditto -c -k --keepParent "$APP" App-simulator.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ScreenMate-${{ steps.version.outputs.version }}-ios-simulator
+          path: App-simulator.zip
+          if-no-files-found: error
+          retention-days: 30

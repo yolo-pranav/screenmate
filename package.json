@@ -1,0 +1,44 @@
+{
+  "name": "screenmate",
+  "version": "1.0.0",
+  "main": "main/main.js",
+  "scripts": {
+    "start": "next start",
+    "dev": "concurrently -n \"NEXT,ELECTRON\" -c \"yellow,blue\" --kill-others \"next dev\" \"electron .\"",
+    "build": "next build && electron-builder",
+    "build-next": "next build",
+    "build-electron": "electron-builder",
+    "build-win": "electron-builder build --win",
+    "build-mac": "electron-builder build --mac",
+    "build-linux": "electron-builder build --linux",
+    "build-mwl": "electron-builder build -mwl"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "UNLICENSED",
+  "description": "Movie and TV discovery app and OTT front-end demo: browse TMDB titles, keep a synced watchlist and watch history, and watch trailers.",
+  "dependencies": {
+    "electron-serve": "^3.0.0",
+    "electron-updater": "^6.8.11"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^8.6.2",
+    "@capacitor/app": "^8.1.0",
+    "@capacitor/cli": "^8.6.2",
+    "@capacitor/core": "^8.6.2",
+    "@capacitor/ios": "^8.6.2",
+    "@supabase/supabase-js": "^2.110.0",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "concurrently": "^8.2.2",
+    "electron": "^39.2.6",
+    "electron-builder": "^24.13.3",
+    "next": "16.0.7",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

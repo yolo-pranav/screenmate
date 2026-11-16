@@ -1,0 +1,114 @@
+apply plugin: 'com.android.application'
+
+// package.json "version" is the single source of the app version.
+// versionCode = major*10000 + minor*100 + patch (1.0.0 -> 10000).
+// Read with a regex rather than a JSON parser import, so editors' Gradle
+// tooling has nothing to resolve.
+def packageJsonVersion = file('../../package.json').text =~ /"version"\s*:\s*"([^"]*)"/
+if (!packageJsonVersion.find()) {
+    throw new RuntimeException("package.json has no \"version\" field")
+}
+def appVersionName = packageJsonVersion.group(1)
+def appVersionMatch = appVersionName =~ /^(\d+)\.(\d+)\.(\d+)$/
+if (!appVersionMatch.matches()) {
+    throw new RuntimeException("package.json version must be x.y.z, got: ${appVersionName}")
+}
+def appVersionMinor = appVersionMatch.group(2) as int
+def appVersionPatch = appVersionMatch.group(3) as int
+if (appVersionMinor > 99 || appVersionPatch > 99) {
+    throw new RuntimeException("package.json version minor and patch must be at most 99 for versionCode, got: ${appVersionName}")
+}
+def appVersionCode = (appVersionMatch.group(1) as int) * 10000 + appVersionMinor * 100 + appVersionPatch
+
+// Release signing: CI passes ANDROID_KEYSTORE_PATH, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS
+// and ANDROID_KEY_PASSWORD; locally android/keystore.properties (gitignored) can hold
+// storeFile, storePassword, keyAlias and keyPassword. Without either, release builds stay unsigned.
+def releaseSigning = null
+if (System.getenv('ANDROID_KEYSTORE_PATH')) {
+    releaseSigning = [
+        storeFile    : file(System.getenv('ANDROID_KEYSTORE_PATH')),
+        storePassword: System.getenv('ANDROID_KEYSTORE_PASSWORD'),
+        keyAlias     : System.getenv('ANDROID_KEY_ALIAS'),
+        keyPassword  : System.getenv('ANDROID_KEY_PASSWORD'),
+    ]
+} else {
+    def keystorePropertiesFile = rootProject.file('keystore.properties')
+    if (keystorePropertiesFile.exists()) {
+        def keystoreProperties = new Properties()
+        keystorePropertiesFile.withInputStream { keystoreProperties.load(it) }
+        if (keystoreProperties['storeFile']) {
+            releaseSigning = [
+                storeFile    : rootProject.file(keystoreProperties['storeFile']),
+                storePassword: keystoreProperties['storePassword'],
+                keyAlias     : keystoreProperties['keyAlias'],
+                keyPassword  : keystoreProperties['keyPassword'],
+            ]
+        }
+    }
+}
+
+android {
+    namespace = "com.yolopranav.screenmate"
+    compileSdk = rootProject.ext.compileSdkVersion
+    defaultConfig {
+        applicationId "com.yolopranav.screenmate"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode appVersionCode
+        versionName appVersionName
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        aaptOptions {
+             // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
+             // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
+            ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+        }
+    }
+    if (releaseSigning != null) {
+        signingConfigs {
+            release {
+                storeFile releaseSigning.storeFile
+                storePassword releaseSigning.storePassword
+                keyAlias releaseSigning.keyAlias
+                keyPassword releaseSigning.keyPassword
+            }
+        }
+    }
+    buildTypes {
+        release {
+            if (releaseSigning != null) {
+                signingConfig signingConfigs.release
+            }
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+repositories {
+    flatDir{
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
+    implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
+    implementation project(':capacitor-android')
+    testImplementation "junit:junit:$junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+    implementation project(':capacitor-cordova-android-plugins')
+}
+
+apply from: 'capacitor.build.gradle'
+
+try {
+    def servicesJSON = file('google-services.json')
+    if (servicesJSON.text) {
+        apply plugin: 'com.google.gms.google-services'
+    }
+} catch(Exception e) {
+    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+}

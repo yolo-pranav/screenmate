@@ -1,0 +1,89 @@
+appId: "app.screeenmate.yolopranav"
+productName: "ScreenMate"
+copyright: "Copyright (c) 2025 Pranav"
+
+# Common build settings
+directories:
+  output: "dist"
+
+# Only what the desktop app runs: the Electron main process, the static web
+# export and the window icon. Runtime node_modules (package.json
+# "dependencies": electron-serve, electron-updater) are added automatically;
+# everything the web app needs is compiled into out/, so it is a devDependency.
+files:
+  - "main/**"
+  - "out/**"
+  - "resources/icon.png"
+  - "package.json"
+
+# Auto updates: electron-updater reads releases from the public GitHub repo.
+# owner/repo are not set here: electron-builder takes them from the
+# package.json "repository" field, or else from the git "origin" remote.
+publish:
+  provider: "github"
+  releaseType: "release"
+
+# Windows Configuration
+win:
+  target: 
+    - "dir"
+    - "nsis"
+  icon: "resources/icon.ico"
+
+portable:
+  artifactName: "${productName}_Portable_${version}.${ext}"
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: "ScreenMate"
+  installerIcon: "resources/icon.ico"
+  uninstallerIcon: "resources/icon.ico"
+  license: "resources/license.txt" 
+  perMachine: true
+  artifactName: "${productName}_Setup_${version}.${ext}"
+
+# Mac Configuration
+# Not code-signed or notarized (no Apple Developer ID yet), so macOS shows a
+# Gatekeeper warning on first launch and Squirrel.Mac cannot install updates:
+# the app only announces new versions and opens the release page. One
+# universal build runs on both Intel and Apple silicon Macs.
+mac:
+  category: "public.app-category.entertainment"
+  target:
+    - target: "dmg"
+      arch:
+        - "universal"
+    - target: "zip"
+      arch:
+        - "universal"
+  icon: "resources/icon.icns"
+  identity: null
+  hardenedRuntime: false
+  gatekeeperAssess: false
+  # Names the zip (the dmg sets its own name below). The zip exists for
+  # latest-mac.yml, the update feed the macOS app reads.
+  artifactName: "${productName}_${version}_mac.${ext}"
+
+dmg:
+  artifactName: "${productName}_Setup_${version}.${ext}"
+  contents:
+    - x: 130
+      y: 220
+    - x: 410
+      y: 220
+      type: "link"
+      path: "/Applications"
+
+# Linux Configuration
+linux:
+  category: "Entertainment"
+  target:
+    - "AppImage"
+    - "deb"
+  icon: "resources/icon.png" # Linux usually uses a high-res PNG
+
+appImage:
+  artifactName: "${productName}_${version}.${ext}"

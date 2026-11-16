@@ -1,0 +1,127 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+.dark .shimmer {
+  background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+
+/* ── Scrollbars ─────────────────────────────────────────────────────────────
+   One look for the page and every scrolling list: a slim rounded thumb on a
+   transparent track that turns blue on hover. `.scrollbar-thin` is the smaller
+   version for lists inside the page (episodes, cast). Touch devices keep
+   their own overlay scrollbars. */
+:root {
+  --scrollbar-thumb: #cbd5e1;
+  --scrollbar-thumb-hover: #60a5fa;
+  --scrollbar-thumb-active: #3b82f6;
+}
+.dark {
+  --scrollbar-thumb: #374151;
+  --scrollbar-thumb-hover: #3b82f6;
+  --scrollbar-thumb-active: #60a5fa;
+}
+*::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+*::-webkit-scrollbar-track,
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb);
+  border-radius: 9999px;
+  /* transparent border = padding around the thumb */
+  border: 3px solid transparent;
+  background-clip: content-box;
+  min-height: 40px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-thumb-hover);
+}
+*::-webkit-scrollbar-thumb:active {
+  background-color: var(--scrollbar-thumb-active);
+}
+.scrollbar-thin::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  border-width: 2px;
+  min-height: 24px;
+}
+/* The page's own scrollbar (Chromium takes the window scrollbar's style from
+   <body> when it has one, so both elements get the rules): a visible lane in the page colour with a blue
+   gradient thumb, tuned separately for the light and dark themes */
+:root {
+  --page-scrollbar-track: #e9edf3;
+  --page-scrollbar-edge: #d8dee8;
+  --page-scrollbar-thumb: linear-gradient(180deg, #93c5fd 0%, #3b82f6 100%);
+  --page-scrollbar-thumb-hover: linear-gradient(180deg, #60a5fa 0%, #2563eb 100%);
+  --page-scrollbar-thumb-active: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+}
+.dark {
+  --page-scrollbar-track: #0b1220;
+  --page-scrollbar-edge: #1f2937;
+  --page-scrollbar-thumb: linear-gradient(180deg, #3b82f6 0%, #1e3a8a 100%);
+  --page-scrollbar-thumb-hover: linear-gradient(180deg, #60a5fa 0%, #1d4ed8 100%);
+  --page-scrollbar-thumb-active: linear-gradient(180deg, #93c5fd 0%, #2563eb 100%);
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 14px;
+}
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track {
+  background: var(--page-scrollbar-track);
+  border-left: 1px solid var(--page-scrollbar-edge);
+}
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb {
+  background: var(--page-scrollbar-thumb);
+  background-clip: padding-box;
+  border: 3px solid transparent;
+  border-radius: 9999px;
+  min-height: 56px;
+}
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover {
+  background: var(--page-scrollbar-thumb-hover);
+  background-clip: padding-box;
+}
+html::-webkit-scrollbar-thumb:active,
+body::-webkit-scrollbar-thumb:active {
+  background: var(--page-scrollbar-thumb-active);
+  background-clip: padding-box;
+}
+
+/* Firefox has no scrollbar pseudo-elements: use the standard properties there */
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) transparent;
+  }
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* @tailwind base;
+@tailwind components;
+@tailwind utilities; */
