@@ -174,8 +174,8 @@ The `windows` job publishes the release as soon as the installer is uploaded. Wi
 - It only runs in installed builds, not in `npm run dev`.
 - It downloads the new installer in the background.
 - When the download finishes, a card says "ScreenMate <version> is ready" with **Restart now** and **Later**.
-- **Restart now** installs immediately. **Later** installs when the app quits.
-- The installer is per-machine (`perMachine: true`), so Windows shows an administrator (UAC) prompt. If the user declines, the update is not installed and is offered again on the next launch.
+- **Restart now** installs silently and reopens the app. **Later** installs silently when the app quits.
+- The installer installs per-user by default (`perMachine: false`), so updates need no administrator (UAC) prompt. Copies installed for all users (Program Files), including every install made before 1.0.3, still show a UAC prompt on each update; reinstalling with the default "Only for me" option removes it.
 - Update errors are logged, never shown to the user.
 
 ### macOS

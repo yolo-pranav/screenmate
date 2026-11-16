@@ -41,8 +41,12 @@ nsis:
   shortcutName: "ScreenMate"
   installerIcon: "resources/icon.ico"
   uninstallerIcon: "resources/icon.ico"
-  license: "resources/license.txt" 
-  perMachine: true
+  license: "resources/license.txt"
+  # Per-user install (AppData\Local\Programs) by default: updates then
+  # install without an administrator (UAC) prompt. The installer still
+  # offers "Anyone who uses this computer", which needs admin for updates.
+  perMachine: false
+  selectPerMachineByDefault: false
   artifactName: "${productName}_Setup_${version}.${ext}"
 
 # Mac Configuration

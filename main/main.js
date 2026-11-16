@@ -183,7 +183,8 @@ ipcMain.on("updates:install", (event) => {
     }
 
     try {
-        autoUpdater.quitAndInstall();
+        // Silent install (no installer wizard), then relaunch the app.
+        autoUpdater.quitAndInstall(true, true);
     } catch (err) {
         console.error("[updates] install failed:", err);
     }
