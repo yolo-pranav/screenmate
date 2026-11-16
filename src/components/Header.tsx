@@ -22,7 +22,7 @@ const Header: NextPage = () => {
 
   return (
     <header style={{ paddingTop: 'env(safe-area-inset-top)' }} className="sticky top-0 z-50 bg-gray-100/90 dark:bg-gray-900/90 backdrop-blur-sm shadow-sm border-b border-gray-200 dark:border-gray-800">
-      <div className="w-full px-4 lg:px-8 py-3 flex justify-between items-center">
+      <div className="w-full px-4 lg:px-8 py-3 short:py-0.5 flex justify-between items-center">
         <div className="flex items-center gap-2">
           {!isHome && (
             <button
@@ -35,7 +35,7 @@ const Header: NextPage = () => {
               </svg>
             </button>
           )}
-          <Link href="/" className="text-2xl sm:text-3xl font-bold text-primary">
+          <Link href="/" className="text-2xl sm:text-3xl short:text-xl font-bold text-primary">
             ScreenMate
           </Link>
         </div>

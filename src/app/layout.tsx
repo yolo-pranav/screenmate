@@ -44,7 +44,7 @@ export default function RootLayout({
         <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-200">
           <AndroidBackButtonHandler />
           <Header />
-          <main className="w-full px-4 lg:px-8 pt-8 pb-[calc(2rem+env(safe-area-inset-bottom))]">{children}</main>
+          <main className="w-full px-4 lg:px-8 pt-8 short:pt-2 pb-[calc(2rem+env(safe-area-inset-bottom))]">{children}</main>
           <DeviceDataChoice />
           <UpdateBanner />
         </div>

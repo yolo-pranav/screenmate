@@ -229,7 +229,7 @@ const ClientPlayer: React.FC = () => {
 
         {/* Full width, but never taller than the window: capped so the whole
             16:9 player fits on wide desktop screens */}
-        <div className="aspect-video w-full max-w-[calc((100vh-9rem)*16/9)] mx-auto">
+        <div className="aspect-video w-full max-w-[calc((100dvh-9rem)*16/9)] short:max-w-[calc((100dvh-6.5rem-env(safe-area-inset-top))*16/9)] mx-auto">
           {activePlayer ? (
             <PlayerView
               player={activePlayer}

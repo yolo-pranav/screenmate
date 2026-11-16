@@ -1,5 +1,7 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
+/* Short screens, i.e. phones in landscape: compact header and spacing */
+@custom-variant short (@media (max-height: 500px));
 
 @keyframes shimmer {
   0% { background-position: -200% 0; }
