@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import type { PluginListenerHandle } from '@capacitor/core';
+import { registerPlugin, type PluginListenerHandle } from '@capacitor/core';
 import { DEFAULT_WORKER_ORIGIN } from '@/services/config';
 
 // In-app updates.
@@ -165,12 +165,11 @@ const getCapacitorPlatform = async (): Promise<string> => {
 export const parseElectronAction = (action: unknown): ElectronUpdateAction =>
   action === 'download' ? 'download' : 'restart';
 
-let pluginPromise: Promise<ApkUpdaterPlugin> | null = null;
-const getPlugin = (): Promise<ApkUpdaterPlugin> => {
-  pluginPromise ??= import('@capacitor/core').then(({ registerPlugin }) =>
-    registerPlugin<ApkUpdaterPlugin>('ApkUpdater'));
-  return pluginPromise;
-};
+// Registered once, synchronously. Never return the plugin from a Promise or
+// `await` it: Capacitor's plugin proxy answers every property, including
+// `then`, so it looks like a thenable and the Promise would never settle.
+const apkUpdater = registerPlugin<ApkUpdaterPlugin>('ApkUpdater');
+const getPlugin = (): ApkUpdaterPlugin => apkUpdater;
 
 // ---- Electron ----
 
@@ -255,7 +254,7 @@ const runAndroidCheck = async () => {
   if (!isNewerBuild(manifest, build)) return;
   const ready = snapshot.ready;
   if (ready?.platform === 'android' && ready.versionCode >= manifest.versionCode) return;
-  const plugin = await getPlugin();
+  const plugin = getPlugin();
   const { path } = await plugin.download({ url: manifest.apkUrl, sha256: manifest.sha256 });
   if (typeof path !== 'string' || !path) throw new Error('Download returned no path');
   const update: AndroidReadyUpdate = {
@@ -340,7 +339,7 @@ export const installUpdate = async () => {
       return;
     }
     setSnapshot({ busy: true });
-    const plugin = await getPlugin();
+    const plugin = getPlugin();
     const { value } = await plugin.canInstall();
     if (!value) { setSnapshot({ needsPermission: true }); return; }
     setSnapshot({ needsPermission: false, settingsUnavailable: false });
@@ -365,7 +364,7 @@ export const installUpdate = async () => {
 // banner keeps Install available and tells the user where to allow it.
 export const openInstallSettings = async () => {
   try {
-    const plugin = await getPlugin();
+    const plugin = getPlugin();
     await plugin.openInstallSettings();
     setSnapshot({ needsPermission: false });
   } catch (err) {
