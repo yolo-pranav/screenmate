@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Delete Your ScreenMate Account</title>
+<meta name="description" content="Delete your ScreenMate account and data.">
+<link rel="icon" type="image/png" href="/icon.png">
+<style>
+  :root { --bg:#ffffff; --fg:#1d1a22; --muted:#5d5866; --accent:#d81b4a; --danger:#c62828; --line:#e7e3ea; --card:#faf8fb; --input:#ffffff; --ok:#1b7f45; --glow:rgba(216,27,74,.10); }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0d0a12; --fg:#efeaf2; --muted:#a59fae; --accent:#ff4d6d; --danger:#ff5a5a; --line:#2a2531; --card:#15111b; --input:#0d0a12; --ok:#4ade80; --glow:rgba(255,77,109,.16); }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.65 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif; }
+  .wrap { max-width:1040px; margin:0 auto; padding:0 16px; }
+  header { border-bottom:1px solid var(--line); }
+  header .wrap { display:flex; align-items:center; justify-content:space-between; height:64px; }
+  .logo { display:flex; align-items:center; gap:10px; font-weight:800; font-size:1.25rem; color:var(--fg); text-decoration:none; }
+  .logo img { width:34px; height:34px; }
+  .logo b { font-weight:800; }
+  .logo span { color:var(--accent); }
+  nav a { color:var(--muted); text-decoration:none; margin-left:18px; font-size:.95rem; }
+  nav a:hover { color:var(--fg); }
+  .top { background:radial-gradient(ellipse at 20% 0%, var(--glow), transparent 60%); }
+  main { max-width:760px; margin:0 auto; padding:48px 16px 72px; }
+  h1 { font-size:clamp(1.9rem,5vw,2.6rem); line-height:1.15; letter-spacing:-.5px; margin:0 0 8px; }
+  h1 span { color:var(--accent); }
+  h2 { font-size:1.2rem; margin:36px 0 8px; padding-top:20px; border-top:1px solid var(--line); }
+  .lead { color:var(--muted); margin:0 0 24px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px 20px; }
+  ol, ul { padding-left:22px; }
+  li { margin:6px 0; }
+  a { color:var(--accent); }
+  label { display:block; font-weight:600; font-size:.95rem; margin:12px 0 4px; }
+  input[type=email], input[type=password] { width:100%; padding:10px 12px; font:inherit; color:var(--fg); background:var(--input); border:1px solid var(--line); border-radius:8px; }
+  input:focus { outline:2px solid var(--accent); outline-offset:1px; }
+  .check { display:flex; gap:10px; align-items:flex-start; font-weight:400; margin:14px 0; }
+  .check input { margin-top:5px; }
+  button { font:inherit; font-weight:600; border:0; border-radius:999px; padding:10px 20px; cursor:pointer; margin-top:14px; }
+  button:disabled { opacity:.55; cursor:default; }
+  .primary { background:var(--accent); color:#fff; }
+  .danger { background:var(--danger); color:#fff; }
+  .ghost { background:transparent; color:var(--muted); border:1px solid var(--line); margin-left:8px; }
+  .msg { margin:12px 0 0; font-size:.95rem; }
+  .msg.err { color:var(--danger); }
+  .msg.ok { color:var(--ok); font-weight:600; }
+  .who { word-break:break-all; font-weight:600; }
+  [hidden] { display:none !important; }
+  footer { border-top:1px solid var(--line); padding:28px 0 40px; color:var(--muted); font-size:.88rem; }
+  footer .links a { margin-right:16px; }
+  footer p { margin:10px 0 0; }
+  @media (max-width:560px) { nav a { margin-left:12px; font-size:.9rem; } }
+</style>
+</head>
+<body>
+<div class="top">
+<header>
+  <div class="wrap">
+    <a class="logo" href="/"><img src="/icon.png" alt=""><b>Screen<span>Mate</span></b></a>
+    <nav><a href="/#download">Download</a><a href="/privacy/">Privacy</a></nav>
+  </div>
+</header>
+<main>
+  <h1>Delete your Screen<span>Mate</span> account</h1>
+  <p class="lead">Delete your ScreenMate account and all data linked to it, right here, in the app, or by email.</p>
+
+  <h2>Delete on this page</h2>
+  <div class="card">
+    <!-- Step 1: sign in -->
+    <form id="signin">
+      <p>Sign in with your ScreenMate account to delete it.</p>
+      <label for="email">Email</label>
+      <input id="email" type="email" autocomplete="email" required>
+      <label for="password">Password</label>
+      <input id="password" type="password" autocomplete="current-password" required>
+      <button class="primary" type="submit">Sign in</button>
+      <p class="msg err" id="signin-msg" role="alert"></p>
+    </form>
+
+    <!-- Step 2: confirm -->
+    <form id="confirm" hidden>
+      <p>Signed in as <span class="who" id="who"></span>.</p>
+      <p>This permanently deletes the account, your watchlist and your watch history. It cannot be undone.</p>
+      <label class="check"><input type="checkbox" id="sure" required> I understand that my account and data will be permanently deleted.</label>
+      <button class="danger" type="submit" id="delete-btn" disabled>Delete my account</button>
+      <button class="ghost" type="button" id="cancel">Cancel</button>
+      <p class="msg err" id="confirm-msg" role="alert"></p>
+    </form>
+
+    <!-- Step 3: done -->
+    <div id="done" hidden>
+      <p class="msg ok">Your ScreenMate account has been deleted.</p>
+      <p>Your account, watchlist and watch history have been removed from our servers. If the app is still installed on a device, it will be signed out there; uninstall it or clear its data to remove the local copy.</p>
+    </div>
+  </div>
+
+  <h2>Delete in the app</h2>
+  <ol>
+    <li>Open ScreenMate and sign in.</li>
+    <li>Tap the <strong>Account</strong> icon (the person icon) at the top right.</li>
+    <li>Tap <strong>Delete account</strong>, then <strong>Delete my account</strong>.</li>
+  </ol>
+
+  <h2>Can't sign in?</h2>
+  <p>Reset your password in the app (Account &rarr; Sign in &rarr; Forgot password), or email <a href="mailto:screenmate.yolo@gmail.com?subject=Delete%20my%20ScreenMate%20account">screenmate.yolo@gmail.com</a> from the address you signed up with, subject <strong>"Delete my ScreenMate account"</strong>. We will delete the account within 30 days, usually much sooner, and reply when it is done.</p>
+
+  <h2>What is deleted</h2>
+  <ul>
+    <li>Your account, including your email address and sign-in details</li>
+    <li>Your watchlist</li>
+    <li>Your watch history</li>
+  </ul>
+  <p>We keep none of this after deletion. Data stored only on a device (for example, if you used the app without an account) never reached our servers; uninstall the app or clear its data to remove it.</p>
+
+  <p>See our <a href="https://screenmate-privacy-site.guptapranav0144.workers.dev">privacy policy</a> for more about how ScreenMate handles your data.</p>
+
+</main>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="links"><a href="/privacy/">Privacy policy</a><a href="/delete-account/">Delete account</a><a href="https://github.com/yolo-pranav/screenmate">GitHub</a><a href="mailto:screenmate.yolo@gmail.com">Contact</a></div>
+    <p>Movie and TV data and images from TMDB. This product uses the TMDB API but is not endorsed or certified by TMDB. Streaming availability from JustWatch.</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0/dist/umd/supabase.js"></script>
+<script>
+(function () {
+  // The app's public config (Supabase URL and anon key) is served by the
+  // ScreenMate worker, so no keys are written into this page.
+  var CONFIG_URL = "https://screenmate.guptapranav0144.workers.dev/config";
+  var $ = function (id) { return document.getElementById(id); };
+  var client = null;
+
+  function show(id) {
+    ["signin", "confirm", "done"].forEach(function (s) { $(s).hidden = s !== id; });
+  }
+
+  function getClient() {
+    if (client) return Promise.resolve(client);
+    return fetch(CONFIG_URL)
+      .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
+      .then(function (cfg) {
+        if (!cfg.supabase || !window.supabase) throw new Error();
+        // persistSession: false keeps the session in memory only; nothing is
+        // saved in this browser.
+        client = window.supabase.createClient(cfg.supabase.url, cfg.supabase.anonKey, {
+          auth: { persistSession: false, autoRefreshToken: false }
+        });
+        return client;
+      })
+      .catch(function () {
+        throw new Error("Couldn't reach ScreenMate. Check your connection and try again.");
+      });
+  }
+
+  function busy(form, on, label) {
+    var btn = form.querySelector("button[type=submit]");
+    btn.disabled = on;
+    if (label) btn.textContent = label;
+  }
+
+  $("signin").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var form = e.target, msg = $("signin-msg");
+    msg.textContent = "";
+    busy(form, true, "Signing in…");
+    getClient()
+      .then(function (c) {
+        return c.auth.signInWithPassword({ email: $("email").value.trim(), password: $("password").value });
+      })
+      .then(function (res) {
+        if (res.error) {
+          var m = res.error.message || "";
+          if (/confirm/i.test(m)) throw new Error("This email hasn't been verified. Verify it in the app first, or email us to delete the account.");
+          if (/invalid/i.test(m)) throw new Error("Wrong email or password.");
+          throw new Error(m || "Couldn't sign in. Please try again.");
+        }
+        $("password").value = "";
+        $("who").textContent = res.data.user.email;
+        $("sure").checked = false;
+        $("delete-btn").disabled = true;
+        show("confirm");
+      })
+      .catch(function (err) { msg.textContent = err.message; })
+      .then(function () { busy(form, false, "Sign in"); });
+  });
+
+  $("sure").addEventListener("change", function () { $("delete-btn").disabled = !this.checked; });
+
+  $("cancel").addEventListener("click", function () {
+    if (client) client.auth.signOut({ scope: "local" });
+    $("confirm-msg").textContent = "";
+    show("signin");
+  });
+
+  $("confirm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var form = e.target, msg = $("confirm-msg");
+    msg.textContent = "";
+    busy(form, true, "Deleting…");
+    // delete_own_account() deletes only the signed-in user; their synced
+    // watchlist and history are removed with the account.
+    client.rpc("delete_own_account")
+      .then(function (res) {
+        if (res.error) throw new Error("Couldn't delete the account: " + res.error.message);
+        return client.auth.signOut({ scope: "local" }).catch(function () {});
+      })
+      .then(function () { show("done"); })
+      .catch(function (err) {
+        msg.textContent = err.message;
+        busy(form, false, "Delete my account");
+      });
+  });
+})();
+</script>
+</body>
+</html>
