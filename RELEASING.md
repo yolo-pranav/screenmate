@@ -204,6 +204,23 @@ No in-app updates. Apple does not let apps install other builds of themselves, s
 
 The plain web build has no updater. It always serves the deployed version.
 
+## Google Play bundle (AAB)
+
+Android has two build flavours. `direct` is the GitHub APK: it has the in-app updater and the `REQUEST_INSTALL_PACKAGES` permission. `play` is for Google Play: no updater and no install permission, because Play delivers updates.
+
+Build the Play bundle locally (with `android/keystore.properties` set up):
+
+```
+npm run build-next
+npx cap sync android
+cd android
+./gradlew bundlePlayRelease
+```
+
+The file is `android/app/build/outputs/bundle/playRelease/app-play-release.aab`. Upload it in Play Console. The release workflow only builds the `direct` APK.
+
+Each Play upload needs a higher versionCode than the last, and the version comes from package.json like every other build.
+
 ## macOS builds
 
 ### What CI builds for macOS

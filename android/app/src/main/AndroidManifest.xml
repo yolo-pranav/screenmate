@@ -38,6 +38,6 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- Lets the in-app updater hand a downloaded APK to the system installer. -->
-    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <!-- REQUEST_INSTALL_PACKAGES (in-app updater) is only in the direct flavour:
+         see android/app/src/direct/AndroidManifest.xml. -->
 </manifest>

@@ -79,6 +79,14 @@ public class ApkUpdaterPlugin extends Plugin {
         ).start();
     }
 
+    /** False in the Google Play build, which is updated by Play, not by this plugin. */
+    @PluginMethod
+    public void isEnabled(PluginCall call) {
+        JSObject result = new JSObject();
+        result.put("value", BuildConfig.IN_APP_UPDATES);
+        call.resolve(result);
+    }
+
     @PluginMethod
     public void canInstall(PluginCall call) {
         boolean value = Build.VERSION.SDK_INT < Build.VERSION_CODES.O || getContext().getPackageManager().canRequestPackageInstalls();

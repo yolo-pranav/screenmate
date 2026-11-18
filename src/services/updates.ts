@@ -49,6 +49,7 @@ export interface AndroidUpdateManifest {
 
 interface ApkUpdaterPlugin {
   download(options: { url: string; sha256?: string }): Promise<{ path: string }>;
+  isEnabled(): Promise<{ value: boolean }>;
   canInstall(): Promise<{ value: boolean }>;
   openInstallSettings(): Promise<void>;
   install(options: { path: string }): Promise<void>;
@@ -319,7 +320,12 @@ export const startUpdateChecks = (): (() => void) => {
     } else {
       // iOS has no in-app update flow and never touches the ApkUpdater plugin
       getCapacitorPlatform()
-        .then(platform => { if (platform === 'android' && !cancelled) stop = startAndroid(); })
+        .then(async platform => {
+          if (platform !== 'android') return;
+          // The Google Play build is updated by Play and has no updater
+          const { value } = await getPlugin().isEnabled();
+          if (value && !cancelled) stop = startAndroid();
+        })
         .catch(err => logError('platform detection failed', err));
     }
   } catch (err) { logError('start failed', err); }

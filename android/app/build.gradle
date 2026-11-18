@@ -63,6 +63,24 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    buildFeatures {
+        buildConfig = true
+    }
+    // direct: GitHub / sideloaded APK. Updates itself, so it asks for the
+    //         install-packages permission (src/direct/AndroidManifest.xml).
+    // play:   Google Play bundle. Play delivers updates, so it has no
+    //         updater and does not request that permission.
+    flavorDimensions = ['distribution']
+    productFlavors {
+        direct {
+            dimension = 'distribution'
+            buildConfigField 'boolean', 'IN_APP_UPDATES', 'true'
+        }
+        play {
+            dimension = 'distribution'
+            buildConfigField 'boolean', 'IN_APP_UPDATES', 'false'
+        }
+    }
     if (releaseSigning != null) {
         signingConfigs {
             release {

@@ -137,7 +137,7 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           chmod +x gradlew
-          ./gradlew assembleRelease --no-daemon
+          ./gradlew assembleDirectRelease --no-daemon
 
       - name: Remove keystore
         if: always()
@@ -149,10 +149,10 @@ jobs:
           REPO: ${{ github.repository }}
         run: |
           VERSION=$(node -p "require('./package.json').version")
-          SRC=android/app/build/outputs/apk/release/app-release.apk
+          SRC=android/app/build/outputs/apk/direct/release/app-direct-release.apk
           if [ ! -f "$SRC" ]; then
             echo "::error::$SRC not found. The release build is probably unsigned; check the ANDROID_* secrets."
-            ls -l android/app/build/outputs/apk/release/ || true
+            ls -l android/app/build/outputs/apk/direct/release/ || true
             exit 1
           fi
           APK="ScreenMate-$VERSION.apk"
