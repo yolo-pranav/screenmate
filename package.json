@@ -1,6 +1,6 @@
 {
   "name": "screenmate",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "main": "main/main.js",
   "scripts": {
     "start": "next start",
